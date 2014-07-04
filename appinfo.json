@@ -1,0 +1,28 @@
+{
+    "appKeys": {
+        "message": 1,
+        "status": 0
+    },
+    "capabilities": [
+        ""
+    ],
+    "companyName": "smoliar.com",
+    "longName": "Energy Control for Pebble",
+    "resources": {
+        "media": [
+            {
+                "file": "images/Pebble Logo.png",
+                "menuIcon": true,
+                "name": "IMAGE_APP_LOGO",
+                "type": "png"
+            }
+        ]
+    },
+    "shortName": "Energy Control",
+    "uuid": "410bdf5c-f28b-447c-a787-e392e6ee2413",
+    "versionCode": 1,
+    "versionLabel": "0.1",
+    "watchapp": {
+        "watchface": false
+    }
+}

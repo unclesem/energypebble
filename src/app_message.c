@@ -3,6 +3,8 @@
 #define NUM_MENU_SECTIONS 1
 #define NUM_FIRST_MENU_ITEMS 3
 //#define NUM_SECOND_MENU_ITEMS 1
+#define BUFSIZE 20
+
 
 static Window *window;
 static Window *sensor_window;
@@ -16,6 +18,12 @@ static TextLayer *text_layer;
 
 // You can draw arbitrary things in a menu item such as a background
 static GBitmap *menu_background;
+static char buf[BUFSIZE]="";
+
+
+void init_buf(char *buf, size_t size);
+void print_buf(char *buf);
+
 
 // A callback is used to specify the amount of sections of menu items
 // With this, you can dynamically add and remove sections
@@ -68,17 +76,17 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
       switch (cell_index->row) {
         case 0:
           // This is a basic menu item with a title and subtitle
-          menu_cell_basic_draw(ctx, cell_layer, "Electricity", "1kWh", NULL);
+          menu_cell_basic_draw(ctx, cell_layer, "Electricity", buf, NULL);
           break;
 
         case 1:
           // This is a basic menu icon with a cycling icon
-          menu_cell_basic_draw(ctx, cell_layer, "Gas", "3m2", NULL);
+          menu_cell_basic_draw(ctx, cell_layer, "Gas", buf, NULL);
           break;
         case 2:
           // Here we use the graphics context to draw something different
           // In this case, we show a strip of a watchface's background
-          menu_cell_basic_draw(ctx, cell_layer, "Water", "3m2", NULL);
+          menu_cell_basic_draw(ctx, cell_layer, "Water", buf, NULL);
           break;
        
       }
@@ -152,23 +160,27 @@ void sensor_window_unload(Window *window) {
   layer_remove_child_layers(window_layer);
   text_layer_destroy(text_layer);
 }
+
 // This initializes the menu upon window load
 void sensor_window_load(Window *window) {
-  Layer *window_layer = window_get_root_layer(window);
+
+    Layer *window_layer = window_get_root_layer(window);
+    snprintf(buf, BUFSIZE, "bla bla %d" ,selected_sensor);
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, buf);
     text_layer = text_layer_create(GRect(0, 0, 144, 154));
-  	text_layer_set_text(text_layer, "bla bla");
+  	text_layer_set_text(text_layer,buf);
 	  text_layer_set_font(text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
 	  text_layer_set_text_alignment(text_layer, GTextAlignmentCenter);
     layer_add_child(window_layer, text_layer_get_layer(text_layer));	
-	  // App Logging!
-	  APP_LOG(APP_LOG_LEVEL_DEBUG, "Just pushed a window!");
+    layer_mark_dirty(menu_layer_get_layer(menu_layer));
 
+	  // App Logging!
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "Just pushed a window!  ");
 }
 static WindowHandlers sensor_window_handlers = {
   .load = sensor_window_load,
   .unload = sensor_window_unload
 };
-
 
 int main(void) {
   window = window_create();
