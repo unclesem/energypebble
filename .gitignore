@@ -1,1 +1,27 @@
+<<<<<<< HEAD
 appinfo.json
+=======
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Libraries
+*.lib
+*.a
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+>>>>>>> 9b3ce055dc0efbad15d3550f9084d0d9c68f67b6
