@@ -3,7 +3,12 @@
 #define NUM_MENU_SECTIONS 1
 #define NUM_FIRST_MENU_ITEMS 3
 //#define NUM_SECOND_MENU_ITEMS 1
-#define BUFSIZE 20
+#define BUFSIZE 25
+// Key values for AppMessage Dictionary
+enum {
+	STATUS_KEY = 0,	
+	MESSAGE_KEY = 1
+};
 
 
 static Window *window;
@@ -182,6 +187,62 @@ static WindowHandlers sensor_window_handlers = {
   .unload = sensor_window_unload
 };
 
+// Write message to buffer & send
+void send_message(void){
+  
+	DictionaryIterator *iter;
+	
+	app_message_outbox_begin(&iter);
+	dict_write_cstring(iter, STATUS_KEY, "0x1");
+	
+	dict_write_end(iter);
+ 	app_message_outbox_send();
+}
+// Called when a message is received from PebbleKitJS
+static void in_received_handler(DictionaryIterator *received, void *context) {
+	Tuple *tuple;
+
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Just got message!");
+	
+	tuple = dict_find(received, STATUS_KEY);
+	if(tuple) {
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Status: %s", tuple->value->cstring); 
+		//APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Status MSG: %d", (int)tuple->value->uint32); 
+    // Set the text, font, and text alignment
+  	//text_layer_set_text(text_layer, tuple->value->cstring);
+	  //text_layer_set_font(text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+	  //text_layer_set_text_alignment(text_layer, GTextAlignmentCenter);
+	  //layer_remove_child_layers(window_get_root_layer(window));
+	  // Add the text layer to the window
+	  //layer_add_child(window_get_root_layer(window), text_layer_get_layer(text_layer));
+
+	  // Push the window
+	  //window_stack_push(window, true);
+	
+    
+	  // App Logging!
+	  
+    snprintf(buf, BUFSIZE,  "Received: %d", (int)tuple->value->uint32);
+    layer_mark_dirty(menu_layer_get_layer(menu_layer));
+
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, buf);
+	}
+	
+	tuple = dict_find(received, MESSAGE_KEY);
+	if(tuple) {
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Message: %s", tuple->value->cstring);
+	}
+
+}
+
+// Called when an incoming message from PebbleKitJS is dropped
+static void in_dropped_handler(AppMessageResult reason, void *context) {	
+}
+
+// Called when PebbleKitJS does not acknowledge receipt of a message
+static void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
+}
+
 int main(void) {
   window = window_create();
 
@@ -195,8 +256,15 @@ int main(void) {
   });
 
   window_stack_push(window, true /* Animated */);
+	app_message_register_inbox_received(in_received_handler); 
+	app_message_register_inbox_dropped(in_dropped_handler); 
+	app_message_register_outbox_failed(out_failed_handler);
+	app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+  send_message();	
 
   app_event_loop();
+  	 //Register AppMessage handlers
+		
 
   window_destroy(window);
 }
