@@ -1,7 +1,7 @@
 #include "pebble.h"
 
-#define NUM_MENU_SECTIONS 1
-#define NUM_FIRST_MENU_ITEMS 3
+//#define NUM_MENU_SECTIONS 1
+//#define NUM_FIRST_MENU_ITEMS 3
 //#define NUM_SECOND_MENU_ITEMS 1
 #define BUFSIZE 25
 // Key values for AppMessage Dictionary
@@ -14,7 +14,13 @@ enum {
 static Window *window;
 static Window *sensor_window;
 static int selected_sensor = 0;
+//menu descrition
 
+static uint num_menu_sections=1;
+static uint num_first_menu_items=1;
+static uint num_second_menu_items=0;
+static uint num_third_menu_items=0;
+  
 // This is a menu layer
 // You have more control than with a simple menu layer
 static MenuLayer *menu_layer;
@@ -24,7 +30,7 @@ static TextLayer *text_layer;
 // You can draw arbitrary things in a menu item such as a background
 static GBitmap *menu_background;
 static char buf[BUFSIZE]="";
-
+static char header_title[15]="Loading data...";
 
 void init_buf(char *buf, size_t size);
 void print_buf(char *buf);
@@ -33,7 +39,7 @@ void print_buf(char *buf);
 // A callback is used to specify the amount of sections of menu items
 // With this, you can dynamically add and remove sections
 static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer, void *data) {
-  return NUM_MENU_SECTIONS;
+  return num_menu_sections;
 }
 
 // Each section has a number of items;  we use a callback to specify this
@@ -41,10 +47,12 @@ static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer, void *data
 static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_index, void *data) {
   switch (section_index) {
     case 0:
-      return NUM_FIRST_MENU_ITEMS;
+      return num_first_menu_items;
 
-    //case 1:
-    //  return NUM_SECOND_MENU_ITEMS;
+    case 1:
+      return num_second_menu_items;
+    case 2:
+      return num_third_menu_items;
 
     default:
       return 0;
@@ -63,7 +71,7 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
   switch (section_index) {
     case 0:
       // Draw title text in the section header
-      menu_cell_basic_header_draw(ctx, cell_layer, "Meters");
+      menu_cell_basic_header_draw(ctx, cell_layer, header_title);
       break;
 
  //   case 1:
@@ -201,7 +209,8 @@ void send_message(void){
 // Called when a message is received from PebbleKitJS
 static void in_received_handler(DictionaryIterator *received, void *context) {
 	Tuple *tuple;
-
+  num_menu_sections=1;
+  num_first_menu_items=3;
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Just got message!");
 	
 	tuple = dict_find(received, STATUS_KEY);
@@ -221,10 +230,11 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
 	
     
 	  // App Logging!
-	  
-    snprintf(buf, BUFSIZE,  "Received: %d", (int)tuple->value->uint32);
+    strncpy(buf,tuple->value->cstring,sizeof(buf));
+    //snprintf(buf, BUFSIZE,  "Received: %s", tuple->value->cstring);
+    strncpy(header_title, "Meters", 15);
+    menu_layer_reload_data(menu_layer);
     layer_mark_dirty(menu_layer_get_layer(menu_layer));
-
 	  APP_LOG(APP_LOG_LEVEL_DEBUG, buf);
 	}
 	
@@ -254,9 +264,9 @@ int main(void) {
     .load = window_load,
     .unload = window_unload,
   });
+	window_stack_push(window, true /* Animated */);
 
-  window_stack_push(window, true /* Animated */);
-	app_message_register_inbox_received(in_received_handler); 
+  app_message_register_inbox_received(in_received_handler); 
 	app_message_register_inbox_dropped(in_dropped_handler); 
 	app_message_register_outbox_failed(out_failed_handler);
 	app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
