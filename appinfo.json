@@ -1,7 +1,10 @@
 {
     "appKeys": {
-        "message": 1,
-        "status": 0
+        "elec_24": 0,
+        "elec_vs_yesterday": 1,
+        "elec_week": 2,
+        "elec_week_vs_last_week": 3,
+        "water": 4
     },
     "capabilities": [
         ""
