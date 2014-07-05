@@ -4,6 +4,12 @@
 //#define NUM_FIRST_MENU_ITEMS 3
 //#define NUM_SECOND_MENU_ITEMS 1
 #define BUFSIZE 25
+#define ELECTRICITY_TOTAL_TITLE "Electricity total"
+#define ELECTRICITY_CONS_TITLE "Elect. Consuption"
+#define ELECTRICITY_GEN_TITLE "Elect. Generation"
+#define GAS_TITLE "Gas"
+#define WATER_TITLE "Water"
+  
 // Key values for AppMessage Dictionary
 enum {
 	ELEC=0,
@@ -45,6 +51,21 @@ enum {
 	WATER_VS_MONTH=34
 };
 
+static char* item1_header="Loading data...";
+static char* item1_current;
+static char* item1_24;
+static char* item2_header;
+static char* item2_current;
+static char* item2_24;
+static char* item3_header;
+static char* item3_current;
+static char* item3_24;
+static char* item4_header;
+static char* item4_current;
+static char* item4_24;
+static char* item5_header;
+static char* item5_current;
+static char* item5_24;
 
 static Window *window;
 static Window *sensor_window;
@@ -65,7 +86,7 @@ static TextLayer *text_layer;
 // You can draw arbitrary things in a menu item such as a background
 static GBitmap *menu_background;
 static char buf[BUFSIZE]="";
-static char header_title[15]="Loading data...";
+static char header_title[32]="Loading data...";
 
 void init_buf(char *buf, size_t size);
 void print_buf(char *buf);
@@ -118,23 +139,31 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 // This is the menu item draw callback where you specify what each item should look like
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
   // Determine which section we're going to draw in
+  char details[20]="";
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Menu details %s",details);
+  if(item1_current&&item1_24){
+   APP_LOG(APP_LOG_LEVEL_DEBUG, "item1_current %s",item1_current);
+   APP_LOG(APP_LOG_LEVEL_DEBUG, "item1_24 %s",item1_24);
+  }
   switch (cell_index->section) {
     case 0:
       // Use the row to specify which item we'll draw
       switch (cell_index->row) {
         case 0:
           // This is a basic menu item with a title and subtitle
-          menu_cell_basic_draw(ctx, cell_layer, "Electricity", buf, NULL);
-          break;
+          if(item1_current&&item1_24)
+            snprintf(details,20,"%s 24h:%s",item1_current,item1_24);
+          menu_cell_basic_draw(ctx, cell_layer, item1_header, details, NULL);
+        break;
 
         case 1:
           // This is a basic menu icon with a cycling icon
-          menu_cell_basic_draw(ctx, cell_layer, "Gas", buf, NULL);
+          menu_cell_basic_draw(ctx, cell_layer, item2_header, buf, NULL);
           break;
         case 2:
           // Here we use the graphics context to draw something different
           // In this case, we show a strip of a watchface's background
-          menu_cell_basic_draw(ctx, cell_layer, "Water", buf, NULL);
+          menu_cell_basic_draw(ctx, cell_layer, item3_header, buf, NULL);
           break;
        
       }
@@ -236,7 +265,7 @@ void send_message(void){
 	DictionaryIterator *iter;
 	
 	app_message_outbox_begin(&iter);
-	dict_write_cstring(iter, STATUS_KEY, "0x1");
+	dict_write_cstring(iter, ELEC, "getData");
 	
 	dict_write_end(iter);
  	app_message_outbox_send();
@@ -244,11 +273,72 @@ void send_message(void){
 // Called when a message is received from PebbleKitJS
 static void in_received_handler(DictionaryIterator *received, void *context) {
 	Tuple *tuple;
-  num_menu_sections=1;
-  num_first_menu_items=3;
+  char time_txt[32];
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Just got message!");
+
+  time_t t = time(NULL);
+  struct tm *lt = localtime(&t);
+  strftime(time_txt, 32, "Meters %H:%M:%S", lt);
+
+  num_menu_sections=1;
+  num_first_menu_items=0;
+  tuple = dict_find(received, ELEC);
+  if(tuple){
+    num_first_menu_items++;
+    item1_current="3000W";
+    item1_24="12.33kWh";
+    item1_header=ELECTRICITY_TOTAL_TITLE;
+  }
+
+  tuple = dict_find(received, ELEC_CONS);
+  if(tuple){
+    num_first_menu_items++;
+    if(num_first_menu_items==1)
+      item1_header=ELECTRICITY_CONS_TITLE;
+    else
+      item2_header=ELECTRICITY_CONS_TITLE;
+
+  }
+  tuple = dict_find(received, ELEC_GEN);
+  if(tuple){
+    num_first_menu_items++;
+    if(num_first_menu_items==1)
+      item1_header=ELECTRICITY_GEN_TITLE;
+    else if(num_first_menu_items==2)
+      item2_header=ELECTRICITY_GEN_TITLE;
+    else 
+      item3_header=ELECTRICITY_GEN_TITLE;
+  }
+  tuple = dict_find(received, GAS);
+  if(tuple){
+    num_first_menu_items++;
+    if(num_first_menu_items==1)
+      item1_header=GAS_TITLE;
+    else if(num_first_menu_items==2)
+      item2_header=GAS_TITLE;
+    else if(num_first_menu_items==3)
+      item3_header=GAS_TITLE;
+    else 
+      item4_header=GAS_TITLE;
+  }
+  tuple = dict_find(received, WATER);
+  if(tuple){
+    num_first_menu_items++;
+    if(num_first_menu_items==1)
+      item1_header=WATER_TITLE;
+    else if(num_first_menu_items==2)
+      item2_header=WATER_TITLE;
+    else if(num_first_menu_items==3)
+      item3_header=WATER_TITLE;
+    else if(num_first_menu_items==4)
+      item4_header=WATER_TITLE;
+    else 
+      item5_header=WATER_TITLE;
+  }
+
 	
-	tuple = dict_find(received, STATUS_KEY);
+	/*
+  tuple = dict_find(received, STATUS_KEY);
 	if(tuple) {
 		APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Status: %s", tuple->value->cstring); 
 		//APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Status MSG: %d", (int)tuple->value->uint32); 
@@ -267,9 +357,6 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
 	  // App Logging!
     strncpy(buf,tuple->value->cstring,sizeof(buf));
     //snprintf(buf, BUFSIZE,  "Received: %s", tuple->value->cstring);
-    strncpy(header_title, "Meters", 15);
-    menu_layer_reload_data(menu_layer);
-    layer_mark_dirty(menu_layer_get_layer(menu_layer));
 	  APP_LOG(APP_LOG_LEVEL_DEBUG, buf);
 	}
 	
@@ -277,6 +364,11 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
 	if(tuple) {
 		APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Message: %s", tuple->value->cstring);
 	}
+*/
+    strncpy(header_title, time_txt,32);
+ 
+    menu_layer_reload_data(menu_layer);
+    layer_mark_dirty(menu_layer_get_layer(menu_layer));
 
 }
 
