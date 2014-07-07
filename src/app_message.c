@@ -10,6 +10,7 @@
 #define GAS_TITLE "Gas"
 #define WATER_TITLE "Water"
   
+static char*  predefind_headers[5]={ELECTRICITY_TOTAL_TITLE,ELECTRICITY_CONS_TITLE,ELECTRICITY_GEN_TITLE,GAS_TITLE,WATER_TITLE};
 // Key values for AppMessage Dictionary
 enum {
 	ELEC=0,
@@ -53,22 +54,8 @@ enum {
 	WATER_VS_MONTH=34
 };
 static char* headers[5]={"Loading data...","","","",""};
-
-static char* item1_header="Loading data...";
-static char* item1_current;
-static char* item1_24="";
-static char* item2_header;
-static char* item2_current;
-static char* item2_24="";
-static char* item3_header;
-static char* item3_current;
-static char* item3_24="";
-static char* item4_header;
-static char* item4_current;
-static char* item4_24="";
-static char* item5_header;
-static char* item5_current;
-static char* item5_24="";
+static char* header_details[5]={"","","","",""};
+static char* sensor_data[35]={'\0','\0',"","","",","","","","",","","","","",","","","","",","","","","",","","","","",","","","",""};
 
 //Window elements
 static Window *window;
@@ -143,55 +130,10 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 // This is the menu item draw callback where you specify what each item should look like
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
   // Determine which section we're going to draw in
-  char details[20]="";
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Menu details %s",details);
-  if(item1_current&&item1_24){
-   APP_LOG(APP_LOG_LEVEL_DEBUG, "item1_current %s",item1_current);
-   APP_LOG(APP_LOG_LEVEL_DEBUG, "item1_24 %s",item1_24);
-  }
-  switch (cell_index->section) {
-    case 0:
-      // Use the row to specify which item we'll draw
-      switch (cell_index->row) {
-        case 0:
-          // This is a basic menu item with a title and subtitle
-       if(item1_current&&item1_24)
-            snprintf(details,20,"%s 24h:%s",item1_current,item1_24);
-          menu_cell_basic_draw(ctx, cell_layer, item1_header, details, NULL);
-        break;
-
-        case 1:
-         if(item2_current&&item2_24)
-            snprintf(details,20,"%s 24h:%s",item2_current,item2_24);
-       
-          // This is a basic menu icon with a cycling icon
-          menu_cell_basic_draw(ctx, cell_layer, item2_header, details, NULL);
-          break;
-        case 2:
-         if(item3_current&&item3_24)
-            snprintf(details,20,"%s 24h:%s",item3_current,item3_24);
-          // Here we use the graphics context to draw something different
-          // In this case, we show a strip of a watchface's background
-          menu_cell_basic_draw(ctx, cell_layer, item3_header, details, NULL);
-          break;
-        case 3:
-         if(item4_current&&item4_24)
-            snprintf(details,20,"%s 24h:%s",item4_current,item4_24);
-          // Here we use the graphics context to draw something different
-          // In this case, we show a strip of a watchface's background
-          menu_cell_basic_draw(ctx, cell_layer, item4_header, details, NULL);
-          break;
-        case 4:
-         if(item4_current&&item4_24)
-            snprintf(details,20,"%s 24h:%s",item4_current,item4_24);
-          // Here we use the graphics context to draw something different
-          // In this case, we show a strip of a watchface's background
-          menu_cell_basic_draw(ctx, cell_layer, item5_header, details, NULL);
-          break;
-       
-      }
-      break;
-    
+  if(cell_index->row<5)
+  {
+    menu_cell_basic_draw(ctx, cell_layer, headers[cell_index->row], header_details[cell_index->row], NULL);
+  }    
 //    Title item
 //    case 1:
 //      switch (cell_index->row) {
@@ -200,7 +142,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 //          menu_cell_basic_draw(ctx, cell_layer, "Final Item","1231",NULL);
 //          break;
 //      }
-  }
+  
 }
 
 // Here we capture when a user selects a menu item
@@ -307,102 +249,25 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
 
   num_menu_sections=1;
   num_first_menu_items=0;
-  tuple = dict_find(received, ELEC);
-  if(tuple){
-    num_first_menu_items++;
-    
-    item1_current=tuple->value->cstring;
-    tupleData=dict_find(received,ELEC_24);
-    if(tupleData)
-    {
-      item1_24=tupleData->value->cstring;
-    }
-    item1_header=ELECTRICITY_TOTAL_TITLE;
-  }
-
-  tuple = dict_find(received, ELEC_CONS);
-  if(tuple){
-    num_first_menu_items++;
-    if(num_first_menu_items==1){
-      item1_header=ELECTRICITY_CONS_TITLE;
-      item1_current=tuple->value->cstring;
-
-    }
-    else
+  for(int i=0;i<5;i++)
+  {
+    tuple = dict_find(received, i*7);
+    if(tuple){
+      headers[num_first_menu_items]=predefind_headers[i];
+      sensor_data[i*7]=tuple->value->cstring;
+      num_first_menu_items++;
+      for(int j=i*7+1;j<i*7+7;j++)
       {
-      item2_header=ELECTRICITY_CONS_TITLE;
-      item2_current=tuple->value->cstring;
-
-    }
-
+        tupleData=dict_find(received,j);
+        if(tupleData)
+        {
+            sensor_data[j]=tupleData->value->cstring;
+        }
+      }
+      if(sensor_data[i*7+1])
+        snprintf(header_details[i],20,"%s 24h:%s",sensor_data[i*7],sensor_data[i*7+1]);
   }
-  tuple = dict_find(received, ELEC_GEN);
-  if(tuple){
-    num_first_menu_items++;
-    if(num_first_menu_items==1){
-      item1_header=ELECTRICITY_GEN_TITLE;
-      item1_current=tuple->value->cstring;
-    }
-    else if(num_first_menu_items==2)
-    {
-      item2_header=ELECTRICITY_GEN_TITLE;
-      item2_current=tuple->value->cstring;
-
-    }
-    else{
-          item3_header=ELECTRICITY_GEN_TITLE;
-          item3_current=tuple->value->cstring;
-    } 
-  }
-  tuple = dict_find(received, GAS);
-  if(tuple){
-    num_first_menu_items++;
-    if(num_first_menu_items==1){
-      item1_header=GAS_TITLE;
-          item1_current=tuple->value->cstring;
 }
-    else if(num_first_menu_items==2){
-      item2_header=GAS_TITLE;
-            item2_current=tuple->value->cstring;
-
-    }
-    else if(num_first_menu_items==3){
-      item3_header=GAS_TITLE;
-            item3_current=tuple->value->cstring;
-
-    }
-    else{
-      item4_header=GAS_TITLE;
-            item4_current=tuple->value->cstring;
-
-    }
-  }
-  tuple = dict_find(received, WATER);
-  if(tuple){
-    num_first_menu_items++;
-    if(num_first_menu_items==1)
-      {
-      item1_header=WATER_TITLE;
-      item1_current=tuple->value->cstring;
-    }
-      else if(num_first_menu_items==2){
-      item2_header=WATER_TITLE;
-      item2_current=tuple->value->cstring;
-    }
-      else if(num_first_menu_items==3){
-      item3_header=WATER_TITLE;
-      item3_current=tuple->value->cstring;
-    }
-      else if(num_first_menu_items==4){
-      item4_header=WATER_TITLE;
-      item4_current=tuple->value->cstring;
-    }
-      else {
-      item5_header=WATER_TITLE;
-      item5_current=tuple->value->cstring;
-    }
-  }
-
 	
 	/*
   tuple = dict_find(received, STATUS_KEY);
