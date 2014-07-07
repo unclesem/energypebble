@@ -53,8 +53,8 @@ enum {
 	WATER_MONTH=33,
 	WATER_VS_MONTH=34
 };
-static char* headers[5]={"Loading data...","","","",""};
-static char* header_details[5]={"","","","",""};
+static char headers[5][32]={"Loading data...","","","",""};
+static char header_details[5][32]={"1","2","3","4","5"};
 static char* sensor_data[35]={'\0','\0',"","","",","","","","",","","","","",","","","","",","","","","",","","","","",","","","",""};
 
 //Window elements
@@ -76,8 +76,8 @@ static TextLayer *text_layer;
 
 // You can draw arbitrary things in a menu item such as a background
 static GBitmap *menu_background;
-static char buf[BUFSIZE]="";
 static char header_title[32]="Loading data...";
+static char buf[BUFSIZE]="";
 
 void init_buf(char *buf, size_t size);
 void print_buf(char *buf);
@@ -130,8 +130,10 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 // This is the menu item draw callback where you specify what each item should look like
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
   // Determine which section we're going to draw in
-  if(cell_index->row<5)
+  if(cell_index->section==0&&cell_index->row<5)
   {
+   // APP_LOG(APP_LOG_LEVEL_DEBUG, "index %d",cell_index->row);
+   // APP_LOG(APP_LOG_LEVEL_DEBUG, header_details[cell_index->row]);
     menu_cell_basic_draw(ctx, cell_layer, headers[cell_index->row], header_details[cell_index->row], NULL);
   }    
 //    Title item
@@ -239,6 +241,7 @@ void send_message(void){
 static void in_received_handler(DictionaryIterator *received, void *context) {
 	Tuple *tuple;
 	Tuple *tupleData;
+ 
 
   char time_txt[32];
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Just got message!");
@@ -251,11 +254,11 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
   num_first_menu_items=0;
   for(int i=0;i<5;i++)
   {
+    
     tuple = dict_find(received, i*7);
     if(tuple){
-      headers[num_first_menu_items]=predefind_headers[i];
+      strncpy(headers[num_first_menu_items],predefind_headers[i],30);
       sensor_data[i*7]=tuple->value->cstring;
-      num_first_menu_items++;
       for(int j=i*7+1;j<i*7+7;j++)
       {
         tupleData=dict_find(received,j);
@@ -265,7 +268,18 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
         }
       }
       if(sensor_data[i*7+1])
-        snprintf(header_details[i],20,"%s 24h:%s",sensor_data[i*7],sensor_data[i*7+1]);
+      {
+         char h_details[32]="";
+          snprintf(h_details,30,"%s 24h:%s",sensor_data[i*7],sensor_data[i*7+1]);
+          strncpy(header_details[num_first_menu_items],h_details,30);
+      }
+     
+      for(int k=0;k<=i;k++)
+      {
+          APP_LOG(APP_LOG_LEVEL_DEBUG, header_details[k]);
+          APP_LOG(APP_LOG_LEVEL_DEBUG, "index %d",k);
+      }
+      num_first_menu_items++;
   }
 }
 	
