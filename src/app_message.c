@@ -19,14 +19,16 @@ enum {
 	ELEC_VS_WEEK=4,
 	ELEC_MONTH=5,
 	ELEC_VS_MONTH=6,
-	ELEC_CONS=7,
+
+  ELEC_CONS=7,
 	ELEC_CONS_24=8,
 	ELEC_CONS_VS_YESTERDAY=9,
 	ELEC_CONS_WEEK=10,
 	ELEC_CONS_VS_WEEK=11,
 	ELEC_CONS_MONTH=12,
 	ELEC_CONS_VS_MONTH=13,
-	ELEC_GEN=14,
+	
+  ELEC_GEN=14,
 	ELEC_GEN_24=15,
 	ELEC_GEN_VS_YESTERDAY=16,
 	ELEC_GEN_WEEK=17,
@@ -50,23 +52,25 @@ enum {
 	WATER_MONTH=33,
 	WATER_VS_MONTH=34
 };
+static char* headers[5]={"Loading data...","","","",""};
 
 static char* item1_header="Loading data...";
 static char* item1_current;
-static char* item1_24;
+static char* item1_24="";
 static char* item2_header;
 static char* item2_current;
-static char* item2_24;
+static char* item2_24="";
 static char* item3_header;
 static char* item3_current;
-static char* item3_24;
+static char* item3_24="";
 static char* item4_header;
 static char* item4_current;
-static char* item4_24;
+static char* item4_24="";
 static char* item5_header;
 static char* item5_current;
-static char* item5_24;
+static char* item5_24="";
 
+//Window elements
 static Window *window;
 static Window *sensor_window;
 static int selected_sensor = 0;
@@ -151,19 +155,38 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
       switch (cell_index->row) {
         case 0:
           // This is a basic menu item with a title and subtitle
-          if(item1_current&&item1_24)
+       if(item1_current&&item1_24)
             snprintf(details,20,"%s 24h:%s",item1_current,item1_24);
           menu_cell_basic_draw(ctx, cell_layer, item1_header, details, NULL);
         break;
 
         case 1:
+         if(item2_current&&item2_24)
+            snprintf(details,20,"%s 24h:%s",item2_current,item2_24);
+       
           // This is a basic menu icon with a cycling icon
-          menu_cell_basic_draw(ctx, cell_layer, item2_header, buf, NULL);
+          menu_cell_basic_draw(ctx, cell_layer, item2_header, details, NULL);
           break;
         case 2:
+         if(item3_current&&item3_24)
+            snprintf(details,20,"%s 24h:%s",item3_current,item3_24);
           // Here we use the graphics context to draw something different
           // In this case, we show a strip of a watchface's background
-          menu_cell_basic_draw(ctx, cell_layer, item3_header, buf, NULL);
+          menu_cell_basic_draw(ctx, cell_layer, item3_header, details, NULL);
+          break;
+        case 3:
+         if(item4_current&&item4_24)
+            snprintf(details,20,"%s 24h:%s",item4_current,item4_24);
+          // Here we use the graphics context to draw something different
+          // In this case, we show a strip of a watchface's background
+          menu_cell_basic_draw(ctx, cell_layer, item4_header, details, NULL);
+          break;
+        case 4:
+         if(item4_current&&item4_24)
+            snprintf(details,20,"%s 24h:%s",item4_current,item4_24);
+          // Here we use the graphics context to draw something different
+          // In this case, we show a strip of a watchface's background
+          menu_cell_basic_draw(ctx, cell_layer, item5_header, details, NULL);
           break;
        
       }
@@ -273,6 +296,8 @@ void send_message(void){
 // Called when a message is received from PebbleKitJS
 static void in_received_handler(DictionaryIterator *received, void *context) {
 	Tuple *tuple;
+	Tuple *tupleData;
+
   char time_txt[32];
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Just got message!");
 
@@ -285,55 +310,97 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
   tuple = dict_find(received, ELEC);
   if(tuple){
     num_first_menu_items++;
-    item1_current="3000W";
-    item1_24="12.33kWh";
+    
+    item1_current=tuple->value->cstring;
+    tupleData=dict_find(received,ELEC_24);
+    if(tupleData)
+    {
+      item1_24=tupleData->value->cstring;
+    }
     item1_header=ELECTRICITY_TOTAL_TITLE;
   }
 
   tuple = dict_find(received, ELEC_CONS);
   if(tuple){
     num_first_menu_items++;
-    if(num_first_menu_items==1)
+    if(num_first_menu_items==1){
       item1_header=ELECTRICITY_CONS_TITLE;
+      item1_current=tuple->value->cstring;
+
+    }
     else
+      {
       item2_header=ELECTRICITY_CONS_TITLE;
+      item2_current=tuple->value->cstring;
+
+    }
 
   }
   tuple = dict_find(received, ELEC_GEN);
   if(tuple){
     num_first_menu_items++;
-    if(num_first_menu_items==1)
+    if(num_first_menu_items==1){
       item1_header=ELECTRICITY_GEN_TITLE;
+      item1_current=tuple->value->cstring;
+    }
     else if(num_first_menu_items==2)
+    {
       item2_header=ELECTRICITY_GEN_TITLE;
-    else 
-      item3_header=ELECTRICITY_GEN_TITLE;
+      item2_current=tuple->value->cstring;
+
+    }
+    else{
+          item3_header=ELECTRICITY_GEN_TITLE;
+          item3_current=tuple->value->cstring;
+    } 
   }
   tuple = dict_find(received, GAS);
   if(tuple){
     num_first_menu_items++;
-    if(num_first_menu_items==1)
+    if(num_first_menu_items==1){
       item1_header=GAS_TITLE;
-    else if(num_first_menu_items==2)
+          item1_current=tuple->value->cstring;
+}
+    else if(num_first_menu_items==2){
       item2_header=GAS_TITLE;
-    else if(num_first_menu_items==3)
+            item2_current=tuple->value->cstring;
+
+    }
+    else if(num_first_menu_items==3){
       item3_header=GAS_TITLE;
-    else 
+            item3_current=tuple->value->cstring;
+
+    }
+    else{
       item4_header=GAS_TITLE;
+            item4_current=tuple->value->cstring;
+
+    }
   }
   tuple = dict_find(received, WATER);
   if(tuple){
     num_first_menu_items++;
     if(num_first_menu_items==1)
+      {
       item1_header=WATER_TITLE;
-    else if(num_first_menu_items==2)
+      item1_current=tuple->value->cstring;
+    }
+      else if(num_first_menu_items==2){
       item2_header=WATER_TITLE;
-    else if(num_first_menu_items==3)
+      item2_current=tuple->value->cstring;
+    }
+      else if(num_first_menu_items==3){
       item3_header=WATER_TITLE;
-    else if(num_first_menu_items==4)
+      item3_current=tuple->value->cstring;
+    }
+      else if(num_first_menu_items==4){
       item4_header=WATER_TITLE;
-    else 
+      item4_current=tuple->value->cstring;
+    }
+      else {
       item5_header=WATER_TITLE;
+      item5_current=tuple->value->cstring;
+    }
   }
 
 	
