@@ -1,4 +1,5 @@
 #include "pebble.h"
+//144 x 168
 
 //#define NUM_MENU_SECTIONS 1
 //#define NUM_FIRST_MENU_ITEMS 3
@@ -54,13 +55,56 @@ enum {
 	WATER_VS_MONTH=34
 };
 static char headers[5][32]={"Loading data...","","","",""};
-static char header_details[5][32]={"1","2","3","4","5"};
+static char header_details[5][32]={"","","","",""};
 static char* sensor_data[35]={'\0','\0',"","","",","","","","",","","","","",","","","","",","","","","",","","","","",","","","",""};
+static const GPathInfo HOUSE_PATH_POINTS = {
+  // This is the amount of points
+  24,
+  // A path can be concave, but it should not twist on itself
+  // The points should be defined in clockwise order due to the rendering
+  // implementation. Counter-clockwise will work in older firmwares, but
+  // it is not officially supported
+  (GPoint []) {
+    {0, 110},
+    {2, 20},
+    {4, 75},
+    {6, 5},
+    {8, 80},
+    {10, 50},
+    {12, 56},
+    {14, 56},
+    {16, 20},
+    {18, 80},
+    {20, 100},
+    {66, 110},
+    {72, 20},
+    {78, 75},
+    {84, 5},
+    {90, 80},
+    {96, 50},
+    {102, 56},
+    {108, 56},
+    {114, 20},
+    {120, 100},
+    {126, 10},
+    {132, 90},
+    {144, 110}
+  }
+};
+static GPath *house_path;
+
+#define NUM_GRAPHIC_PATHS 2
+
+static GPath *graphic_paths[NUM_GRAPHIC_PATHS];
 
 //Window elements
 static Window *window;
 static Window *sensor_window;
+static Layer *path_layer;
 static int selected_sensor = 0;
+
+
+
 //menu descrition
 
 static uint num_menu_sections=1;
@@ -79,8 +123,12 @@ static GBitmap *menu_background;
 static char header_title[32]="Loading data...";
 static char buf[BUFSIZE]="";
 
-void init_buf(char *buf, size_t size);
-void print_buf(char *buf);
+static GPath *current_path = NULL;
+static int current_path_index = 0;
+static int path_angle = 0;
+static bool outline_mode = true;
+
+void send_message(void);
 
 
 // A callback is used to specify the amount of sections of menu items
@@ -162,6 +210,12 @@ void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *da
 //  }
 
 }
+void menu_longclick_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Menu longclick ! %d",cell_index->row);
+  send_message();
+}
+ 
+
 
 // This initializes the menu upon window load
 void window_load(Window *window) {
@@ -186,6 +240,7 @@ void window_load(Window *window) {
     .draw_header = menu_draw_header_callback,
     .draw_row = menu_draw_row_callback,
     .select_click = menu_select_callback,
+    .select_long_click = menu_longclick_callback
   });
 
   // Bind the menu layer's click config provider to the window for interactivity
@@ -204,7 +259,26 @@ void sensor_window_unload(Window *window) {
   layer_remove_child_layers(window_layer);
   text_layer_destroy(text_layer);
 }
+// This is the layer update callback which is called on render updates
+static void path_layer_update_callback(Layer *me, GContext *ctx) {
+  (void)me;
 
+  // You can rotate the path before rendering
+  //gpath_rotate_to(current_path, (TRIG_MAX_ANGLE / 360) * path_angle);
+
+  // There are two ways you can draw a GPath: outline or filled
+  // In this example, only one or the other is drawn, but you can draw
+  // multiple instances of the same path filled or outline.
+  if (outline_mode) {
+    // draw outline uses the stroke color
+    graphics_context_set_stroke_color(ctx, GColorBlack);
+    gpath_draw_outline(ctx, current_path);
+  } else {
+    // draw filled uses the fill color
+    graphics_context_set_fill_color(ctx, GColorBlack);
+    gpath_draw_filled(ctx, current_path);
+  }
+}
 // This initializes the menu upon window load
 void sensor_window_load(Window *window) {
 
@@ -217,6 +291,16 @@ void sensor_window_load(Window *window) {
 	  text_layer_set_text_alignment(text_layer, GTextAlignmentCenter);
     layer_add_child(window_layer, text_layer_get_layer(text_layer));	
     layer_mark_dirty(menu_layer_get_layer(menu_layer));
+    
+  
+  
+    // Cycle to the next path
+    // Pass the corresponding GPathInfo to initialize a GPath
+    current_path = gpath_create(&HOUSE_PATH_POINTS);
+    GRect bounds = layer_get_frame(window_layer);
+    path_layer = layer_create(bounds);
+    layer_set_update_proc(path_layer, path_layer_update_callback);
+    layer_add_child(window_layer, path_layer);
 
 	  // App Logging!
 	  APP_LOG(APP_LOG_LEVEL_DEBUG, "Just pushed a window!  ");
@@ -236,6 +320,9 @@ void send_message(void){
 	
 	dict_write_end(iter);
  	app_message_outbox_send();
+  strncpy(header_title, "Loading data....",32);
+  layer_mark_dirty(menu_layer_get_layer(menu_layer));
+
 }
 // Called when a message is received from PebbleKitJS
 static void in_received_handler(DictionaryIterator *received, void *context) {
