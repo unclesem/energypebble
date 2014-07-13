@@ -4,7 +4,7 @@
 //#define NUM_MENU_SECTIONS 1
 //#define NUM_FIRST_MENU_ITEMS 3
 //#define NUM_SECOND_MENU_ITEMS 1
-#define BUFSIZE 25
+#define BUFSIZE 35
 #define ELECTRICITY_TOTAL_TITLE "Electricity total"
 #define ELECTRICITY_CONS_TITLE "Elect. Consuption"
 #define ELECTRICITY_GEN_TITLE "Elect. Generation"
@@ -200,6 +200,7 @@ void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *da
   // Use the row to specify which item will receive the select action
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Menu selected ! %d",cell_index->row);
   selected_sensor=cell_index->row;
+
   window_stack_push(sensor_window, true);
   
 //  switch (cell_index->row) {
@@ -258,6 +259,7 @@ void sensor_window_unload(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   layer_remove_child_layers(window_layer);
   text_layer_destroy(text_layer);
+  //destroy all layers
 }
 // This is the layer update callback which is called on render updates
 static void path_layer_update_callback(Layer *me, GContext *ctx) {
@@ -279,17 +281,32 @@ static void path_layer_update_callback(Layer *me, GContext *ctx) {
     gpath_draw_filled(ctx, current_path);
   }
 }
+static void draw_sensor_rect(Layer *me, GContext *ctx) {
+    graphics_context_set_fill_color(ctx , GColorWhite);
+    graphics_context_set_stroke_color(ctx, GColorBlack);
+    GRect bounds = layer_get_bounds(me);
+    graphics_fill_rect(ctx,GRect(0, 0, bounds.size.w, bounds.size.h),4,GCornersAll );
+  
+
+}
 // This initializes the menu upon window load
 void sensor_window_load(Window *window) {
 
     Layer *window_layer = window_get_root_layer(window);
-    snprintf(buf, BUFSIZE, "bla bla %d" ,selected_sensor);
+    //GRect rect=GRect(0, 0, 50, 50);
+    GRect rect = layer_get_frame(window_layer);
+
+    Layer *rectLayer=layer_create(rect);
+    layer_set_update_proc(rectLayer, draw_sensor_rect);
+    layer_add_child(window_layer, rectLayer);
+
+    snprintf(buf, BUFSIZE, "M:-200.3kWh -2000%s" ,"%");
 	  APP_LOG(APP_LOG_LEVEL_DEBUG, buf);
-    text_layer = text_layer_create(GRect(0, 0, 144, 154));
+    text_layer = text_layer_create(GRect(0, 80, 144,20 ));
   	text_layer_set_text(text_layer,buf);
-	  text_layer_set_font(text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+	  text_layer_set_font(text_layer, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer, GTextAlignmentCenter);
-    layer_add_child(window_layer, text_layer_get_layer(text_layer));	
+    layer_add_child(rectLayer, text_layer_get_layer(text_layer));	
     layer_mark_dirty(menu_layer_get_layer(menu_layer));
     
   
@@ -297,13 +314,16 @@ void sensor_window_load(Window *window) {
     // Cycle to the next path
     // Pass the corresponding GPathInfo to initialize a GPath
     current_path = gpath_create(&HOUSE_PATH_POINTS);
-    GRect bounds = layer_get_frame(window_layer);
+    //GRect bounds = layer_get_frame(window_layer);
+    GRect bounds=GRect(0, 0, 142, 76);
     path_layer = layer_create(bounds);
     layer_set_update_proc(path_layer, path_layer_update_callback);
-    layer_add_child(window_layer, path_layer);
+    layer_add_child(rectLayer, path_layer);
 
 	  // App Logging!
 	  APP_LOG(APP_LOG_LEVEL_DEBUG, "Just pushed a window!  ");
+
+
 }
 static WindowHandlers sensor_window_handlers = {
   .load = sensor_window_load,
@@ -417,6 +437,7 @@ int main(void) {
   window = window_create();
 
   sensor_window = window_create();
+  window_set_background_color(sensor_window, GColorBlack);
   window_set_window_handlers(sensor_window, sensor_window_handlers);
 
   // Setup the window handlers
