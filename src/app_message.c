@@ -65,30 +65,30 @@ static const GPathInfo HOUSE_PATH_POINTS = {
   // implementation. Counter-clockwise will work in older firmwares, but
   // it is not officially supported
   (GPoint []) {
-    {0, 110},
+    {0, 71},
     {2, 20},
     {4, 75},
     {6, 5},
-    {8, 80},
+    {8, 69},
     {10, 50},
     {12, 56},
     {14, 56},
     {16, 20},
-    {18, 80},
-    {20, 100},
-    {66, 110},
+    {18, 69},
+    {20, 69},
+    {66, 69},
     {72, 20},
     {78, 75},
     {84, 5},
-    {90, 80},
+    {90, 69},
     {96, 50},
     {102, 56},
     {108, 56},
     {114, 20},
-    {120, 100},
+    {120, 69},
     {126, 10},
     {132, 90},
-    {144, 110}
+    {144, 71}
   }
 };
 static GPath *house_path;
@@ -100,7 +100,6 @@ static GPath *graphic_paths[NUM_GRAPHIC_PATHS];
 //Window elements
 static Window *window;
 static Window *sensor_window;
-static Layer *path_layer;
 static int selected_sensor = 0;
 
 
@@ -115,13 +114,21 @@ static uint num_third_menu_items=0;
 // This is a menu layer
 // You have more control than with a simple menu layer
 static MenuLayer *menu_layer;
-static TextLayer *text_layer;
+static TextLayer *text_layer_d;
+static TextLayer *text_layer_w;
+static TextLayer *text_layer_m;
+static TextLayer *text_layer_current;
+static Layer *borderLayer;
+static Layer *path_layer;
+static Layer *bottomLayer;
 
 
 // You can draw arbitrary things in a menu item such as a background
 static GBitmap *menu_background;
 static char header_title[32]="Loading data...";
 static char buf[BUFSIZE]="";
+static char buf_w[BUFSIZE]="";
+static char buf_m[BUFSIZE]="";
 
 static GPath *current_path = NULL;
 static int current_path_index = 0;
@@ -199,10 +206,11 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
   // Use the row to specify which item will receive the select action
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Menu selected ! %d",cell_index->row);
-  selected_sensor=cell_index->row;
-
-  window_stack_push(sensor_window, true);
-  
+  if(sensor_data[0]!=NULL)
+  {
+      selected_sensor=cell_index->row;
+      window_stack_push(sensor_window, true);
+  } 
 //  switch (cell_index->row) {
 //    // This is the menu item with the cycling icon
 //    case 1:
@@ -255,12 +263,6 @@ void window_unload(Window *window) {
   menu_layer_destroy(menu_layer);
 }
 
-void sensor_window_unload(Window *window) {
-  Layer *window_layer = window_get_root_layer(window);
-  layer_remove_child_layers(window_layer);
-  text_layer_destroy(text_layer);
-  //destroy all layers
-}
 // This is the layer update callback which is called on render updates
 static void path_layer_update_callback(Layer *me, GContext *ctx) {
   (void)me;
@@ -289,42 +291,104 @@ static void draw_sensor_rect(Layer *me, GContext *ctx) {
   
 
 }
+static void draw_bottom_layer(Layer *me, GContext *ctx) {
+    graphics_context_set_fill_color(ctx , GColorWhite);
+    graphics_context_set_stroke_color(ctx, GColorBlack);
+    GRect bounds = layer_get_bounds(me);
+    graphics_draw_line(ctx,GPoint(17, 5),GPoint(127,5));
+    graphics_draw_line(ctx,GPoint(17, 6),GPoint(127,6));
+  
+    graphics_draw_line(ctx,GPoint(17, 28),GPoint(127,28));
+    graphics_draw_line(ctx,GPoint(17, 29),GPoint(127,29));
+
+}
+
 // This initializes the menu upon window load
 void sensor_window_load(Window *window) {
-
+ // TODO !!! DO NOT FORGET TO COLLECT GARBAGE
     Layer *window_layer = window_get_root_layer(window);
     //GRect rect=GRect(0, 0, 50, 50);
     GRect rect = layer_get_frame(window_layer);
 
-    Layer *rectLayer=layer_create(rect);
-    layer_set_update_proc(rectLayer, draw_sensor_rect);
-    layer_add_child(window_layer, rectLayer);
+    borderLayer=layer_create(rect);
+    layer_set_update_proc(borderLayer, draw_sensor_rect);
+    layer_add_child(window_layer, borderLayer);
 
-    snprintf(buf, BUFSIZE, "M:-200.3kWh -2000%s" ,"%");
-	  APP_LOG(APP_LOG_LEVEL_DEBUG, buf);
-    text_layer = text_layer_create(GRect(0, 80, 144,20 ));
-  	text_layer_set_text(text_layer,buf);
-	  text_layer_set_font(text_layer, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
-	  text_layer_set_text_alignment(text_layer, GTextAlignmentCenter);
-    layer_add_child(rectLayer, text_layer_get_layer(text_layer));	
-    layer_mark_dirty(menu_layer_get_layer(menu_layer));
-    
-  
-  
-    // Cycle to the next path
+
+      // Cycle to the next path
     // Pass the corresponding GPathInfo to initialize a GPath
     current_path = gpath_create(&HOUSE_PATH_POINTS);
     //GRect bounds = layer_get_frame(window_layer);
-    GRect bounds=GRect(0, 0, 142, 76);
+    GRect bounds=GRect(0, 0, 142, 72);
     path_layer = layer_create(bounds);
     layer_set_update_proc(path_layer, path_layer_update_callback);
-    layer_add_child(rectLayer, path_layer);
+    layer_add_child(borderLayer, path_layer);
+
+    snprintf(buf_m, BUFSIZE, "M: %10s %6s" ,sensor_data[selected_sensor*7+5],sensor_data[selected_sensor*7+6]);
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, buf);
+    text_layer_m = text_layer_create(GRect(0, 130, rect.size.w,18));
+  	text_layer_set_text(text_layer_m,buf_m);
+	  text_layer_set_font(text_layer_m, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
+	  text_layer_set_text_alignment(text_layer_m, GTextAlignmentCenter);
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_m));	
+  
+    snprintf(buf_w, BUFSIZE, "W: %10s %6s" ,sensor_data[selected_sensor*7+3],sensor_data[selected_sensor*7+4]);
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, buf);
+    text_layer_w = text_layer_create(GRect(0, 113, rect.size.w,18));
+  	text_layer_set_text(text_layer_w,buf_w);
+	  text_layer_set_font(text_layer_w, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
+	  text_layer_set_text_alignment(text_layer_w, GTextAlignmentCenter);
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_w));	
+
+    snprintf(buf, BUFSIZE, "D: %10s %6s" ,sensor_data[selected_sensor*7+1],sensor_data[selected_sensor*7+2]);
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, buf);
+    text_layer_d = text_layer_create(GRect(0, 96, rect.size.w,18));
+  	text_layer_set_text(text_layer_d,buf);
+	  text_layer_set_font(text_layer_d, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
+	  text_layer_set_text_alignment(text_layer_d, GTextAlignmentCenter);
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_d));	
+
+  
+    rect = layer_get_frame(borderLayer);
+    text_layer_current = text_layer_create(GRect(0, 70, rect.size.w,24));
+  	text_layer_set_text(text_layer_current,sensor_data[selected_sensor*7]);
+	  text_layer_set_font(text_layer_current, fonts_get_system_font( FONT_KEY_GOTHIC_24_BOLD));
+	  text_layer_set_text_alignment(text_layer_current, GTextAlignmentCenter);
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_current));	
+
+  
+  
+
+
+    //layer_mark_dirty(menu_layer_get_layer(menu_layer));
+    
+    bottomLayer=layer_create(GRect(0,70,rect.size.w,rect.size.h-72));
+    layer_set_update_proc(bottomLayer, draw_bottom_layer);
+    layer_add_child(borderLayer, bottomLayer);
+
+  
+  
 
 	  // App Logging!
 	  APP_LOG(APP_LOG_LEVEL_DEBUG, "Just pushed a window!  ");
 
 
 }
+void sensor_window_unload(Window *window) {
+  Layer *window_layer = window_get_root_layer(window);
+  layer_remove_child_layers(bottomLayer);
+  layer_remove_child_layers(borderLayer);
+  layer_remove_child_layers(window_layer);
+  layer_destroy(borderLayer);
+  layer_destroy(bottomLayer);
+  layer_destroy(path_layer);
+  text_layer_destroy(text_layer_current);
+  text_layer_destroy(text_layer_d);
+  text_layer_destroy(text_layer_w);
+  text_layer_destroy(text_layer_m);
+  //destroy all layers
+}
+
 static WindowHandlers sensor_window_handlers = {
   .load = sensor_window_load,
   .unload = sensor_window_unload
@@ -457,5 +521,6 @@ int main(void) {
   	 //Register AppMessage handlers
 		
 
+  window_destroy(sensor_window);
   window_destroy(window);
 }
