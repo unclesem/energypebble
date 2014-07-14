@@ -114,9 +114,15 @@ static uint num_third_menu_items=0;
 // This is a menu layer
 // You have more control than with a simple menu layer
 static MenuLayer *menu_layer;
-static TextLayer *text_layer_d;
-static TextLayer *text_layer_w;
-static TextLayer *text_layer_m;
+static TextLayer *text_layer_d1;
+static TextLayer *text_layer_d2;
+static TextLayer *text_layer_d3;
+static TextLayer *text_layer_w1;
+static TextLayer *text_layer_w2;
+static TextLayer *text_layer_w3;
+static TextLayer *text_layer_m1;
+static TextLayer *text_layer_m2;
+static TextLayer *text_layer_m3;
 static TextLayer *text_layer_current;
 static Layer *borderLayer;
 static Layer *path_layer;
@@ -324,29 +330,54 @@ void sensor_window_load(Window *window) {
     layer_set_update_proc(path_layer, path_layer_update_callback);
     layer_add_child(borderLayer, path_layer);
 
-    snprintf(buf_m, BUFSIZE, "M: %10s %6s" ,sensor_data[selected_sensor*7+5],sensor_data[selected_sensor*7+6]);
-	  APP_LOG(APP_LOG_LEVEL_DEBUG, buf);
-    text_layer_m = text_layer_create(GRect(0, 130, rect.size.w,18));
-  	text_layer_set_text(text_layer_m,buf_m);
-	  text_layer_set_font(text_layer_m, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
-	  text_layer_set_text_alignment(text_layer_m, GTextAlignmentCenter);
-    layer_add_child(borderLayer, text_layer_get_layer(text_layer_m));	
-  
-    snprintf(buf_w, BUFSIZE, "W: %10s %6s" ,sensor_data[selected_sensor*7+3],sensor_data[selected_sensor*7+4]);
-	  APP_LOG(APP_LOG_LEVEL_DEBUG, buf);
-    text_layer_w = text_layer_create(GRect(0, 113, rect.size.w,18));
-  	text_layer_set_text(text_layer_w,buf_w);
-	  text_layer_set_font(text_layer_w, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
-	  text_layer_set_text_alignment(text_layer_w, GTextAlignmentCenter);
-    layer_add_child(borderLayer, text_layer_get_layer(text_layer_w));	
+    text_layer_m1 = text_layer_create(GRect(0, 130, 16,18));
+  	text_layer_set_text(text_layer_m1,"M:");
+	  text_layer_set_font(text_layer_m1, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
+	  text_layer_set_text_alignment(text_layer_m1, GTextAlignmentCenter);
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_m1));	
+    text_layer_m2 = text_layer_create(GRect(16, 130, 78,18));
+  	text_layer_set_text(text_layer_m2,sensor_data[selected_sensor*7+5]);
+	  text_layer_set_font(text_layer_m2, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
+	  text_layer_set_text_alignment(text_layer_m2, GTextAlignmentRight);
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_m2));	
+    text_layer_m3 = text_layer_create(GRect(93, 130, 51,18));
+  	text_layer_set_text(text_layer_m3,sensor_data[selected_sensor*7+6]);
+	  text_layer_set_font(text_layer_m3, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
+	  text_layer_set_text_alignment(text_layer_m3, GTextAlignmentRight);
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_m3));	
 
-    snprintf(buf, BUFSIZE, "D: %10s %6s" ,sensor_data[selected_sensor*7+1],sensor_data[selected_sensor*7+2]);
-	  APP_LOG(APP_LOG_LEVEL_DEBUG, buf);
-    text_layer_d = text_layer_create(GRect(0, 96, rect.size.w,18));
-  	text_layer_set_text(text_layer_d,buf);
-	  text_layer_set_font(text_layer_d, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
-	  text_layer_set_text_alignment(text_layer_d, GTextAlignmentCenter);
-    layer_add_child(borderLayer, text_layer_get_layer(text_layer_d));	
+
+    text_layer_w1 = text_layer_create(GRect(0, 113, 16,18));
+  	text_layer_set_text(text_layer_w1,"W:");
+	  text_layer_set_font(text_layer_w1, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
+	  text_layer_set_text_alignment(text_layer_w1, GTextAlignmentCenter);
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_w1));	
+    text_layer_w2 = text_layer_create(GRect(16, 113, 78,18));
+  	text_layer_set_text(text_layer_w2,sensor_data[selected_sensor*7+3]);
+	  text_layer_set_font(text_layer_w2, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
+	  text_layer_set_text_alignment(text_layer_w2, GTextAlignmentRight);
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_w2));	
+    text_layer_w3 = text_layer_create(GRect(93, 113, 51,18));
+  	text_layer_set_text(text_layer_w3,sensor_data[selected_sensor*7+4]);
+	  text_layer_set_font(text_layer_w3, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
+	  text_layer_set_text_alignment(text_layer_w3, GTextAlignmentRight);
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_w3));	
+  
+    text_layer_d1 = text_layer_create(GRect(0, 96, 16,18));
+  	text_layer_set_text(text_layer_d1,"D:");
+	  text_layer_set_font(text_layer_d1, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
+	  text_layer_set_text_alignment(text_layer_d1, GTextAlignmentCenter);
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_d1));	
+    text_layer_d2 = text_layer_create(GRect(15, 96, 78,18));
+  	text_layer_set_text(text_layer_d2,sensor_data[selected_sensor*7+1]);
+	  text_layer_set_font(text_layer_d2, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
+	  text_layer_set_text_alignment(text_layer_d2, GTextAlignmentRight);
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_d2));	
+    text_layer_d3 = text_layer_create(GRect(93, 96, 51,18));
+  	text_layer_set_text(text_layer_d3,sensor_data[selected_sensor*7+2]);
+	  text_layer_set_font(text_layer_d3, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
+	  text_layer_set_text_alignment(text_layer_d3, GTextAlignmentRight);
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_d3));	
 
   
     rect = layer_get_frame(borderLayer);
@@ -383,9 +414,15 @@ void sensor_window_unload(Window *window) {
   layer_destroy(bottomLayer);
   layer_destroy(path_layer);
   text_layer_destroy(text_layer_current);
-  text_layer_destroy(text_layer_d);
-  text_layer_destroy(text_layer_w);
-  text_layer_destroy(text_layer_m);
+  text_layer_destroy(text_layer_d3);
+  text_layer_destroy(text_layer_d2);
+  text_layer_destroy(text_layer_d1);
+  text_layer_destroy(text_layer_w1);
+  text_layer_destroy(text_layer_w2);
+  text_layer_destroy(text_layer_w3);
+  text_layer_destroy(text_layer_m1);
+  text_layer_destroy(text_layer_m2);
+  text_layer_destroy(text_layer_m3);
   //destroy all layers
 }
 
