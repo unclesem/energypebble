@@ -334,52 +334,60 @@ void sensor_window_load(Window *window) {
   	text_layer_set_text(text_layer_m1,"M:");
 	  text_layer_set_font(text_layer_m1, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer_m1, GTextAlignmentCenter);
-    layer_add_child(borderLayer, text_layer_get_layer(text_layer_m1));	
-    text_layer_m2 = text_layer_create(GRect(16, 130, 78,18));
+  
+    text_layer_m2 = text_layer_create(GRect(13, 130, 75,18));
   	text_layer_set_text(text_layer_m2,sensor_data[selected_sensor*7+5]);
 	  text_layer_set_font(text_layer_m2, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer_m2, GTextAlignmentRight);
-    layer_add_child(borderLayer, text_layer_get_layer(text_layer_m2));	
-    text_layer_m3 = text_layer_create(GRect(93, 130, 51,18));
+    
+
+    text_layer_m3 = text_layer_create(GRect(85, 130, 59,18));
   	text_layer_set_text(text_layer_m3,sensor_data[selected_sensor*7+6]);
 	  text_layer_set_font(text_layer_m3, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer_m3, GTextAlignmentRight);
+    
     layer_add_child(borderLayer, text_layer_get_layer(text_layer_m3));	
-
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_m2));	
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_m1));	
 
     text_layer_w1 = text_layer_create(GRect(0, 113, 16,18));
   	text_layer_set_text(text_layer_w1,"W:");
 	  text_layer_set_font(text_layer_w1, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer_w1, GTextAlignmentCenter);
-    layer_add_child(borderLayer, text_layer_get_layer(text_layer_w1));	
-    text_layer_w2 = text_layer_create(GRect(16, 113, 78,18));
+
+    text_layer_w2 = text_layer_create(GRect(13, 113, 75,18));
   	text_layer_set_text(text_layer_w2,sensor_data[selected_sensor*7+3]);
 	  text_layer_set_font(text_layer_w2, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer_w2, GTextAlignmentRight);
-    layer_add_child(borderLayer, text_layer_get_layer(text_layer_w2));	
-    text_layer_w3 = text_layer_create(GRect(93, 113, 51,18));
+    
+    text_layer_w3 = text_layer_create(GRect(85, 113, 59,18));
   	text_layer_set_text(text_layer_w3,sensor_data[selected_sensor*7+4]);
 	  text_layer_set_font(text_layer_w3, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer_w3, GTextAlignmentRight);
+
     layer_add_child(borderLayer, text_layer_get_layer(text_layer_w3));	
-  
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_w2));	
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_w1));	
+
     text_layer_d1 = text_layer_create(GRect(0, 96, 16,18));
   	text_layer_set_text(text_layer_d1,"D:");
 	  text_layer_set_font(text_layer_d1, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer_d1, GTextAlignmentCenter);
-    layer_add_child(borderLayer, text_layer_get_layer(text_layer_d1));	
-    text_layer_d2 = text_layer_create(GRect(15, 96, 78,18));
+
+    text_layer_d2 = text_layer_create(GRect(13, 96, 75,18));
   	text_layer_set_text(text_layer_d2,sensor_data[selected_sensor*7+1]);
 	  text_layer_set_font(text_layer_d2, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer_d2, GTextAlignmentRight);
-    layer_add_child(borderLayer, text_layer_get_layer(text_layer_d2));	
-    text_layer_d3 = text_layer_create(GRect(93, 96, 51,18));
+
+    text_layer_d3 = text_layer_create(GRect(85, 96, 59,18));
   	text_layer_set_text(text_layer_d3,sensor_data[selected_sensor*7+2]);
 	  text_layer_set_font(text_layer_d3, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer_d3, GTextAlignmentRight);
+    
     layer_add_child(borderLayer, text_layer_get_layer(text_layer_d3));	
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_d2));	
+    layer_add_child(borderLayer, text_layer_get_layer(text_layer_d1));	
 
-  
     rect = layer_get_frame(borderLayer);
     text_layer_current = text_layer_create(GRect(0, 70, rect.size.w,24));
   	text_layer_set_text(text_layer_current,sensor_data[selected_sensor*7]);
