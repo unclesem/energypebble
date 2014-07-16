@@ -21,42 +21,47 @@ enum {
 	ELEC_VS_WEEK=4,
 	ELEC_MONTH=5,
 	ELEC_VS_MONTH=6,
+	ELEC_GRAPH=7,
 
-  ELEC_CONS=7,
-	ELEC_CONS_24=8,
-	ELEC_CONS_VS_YESTERDAY=9,
-	ELEC_CONS_WEEK=10,
-	ELEC_CONS_VS_WEEK=11,
-	ELEC_CONS_MONTH=12,
-	ELEC_CONS_VS_MONTH=13,
+        ELEC_CONS=8,
+	ELEC_CONS_24=9,
+	ELEC_CONS_VS_YESTERDAY=10,
+	ELEC_CONS_WEEK=11,
+	ELEC_CONS_VS_WEEK=12,
+	ELEC_CONS_MONTH=13,
+	ELEC_CONS_VS_MONTH=14,
+	ELEC_CONS_GRAPH=15,
 	
-  ELEC_GEN=14,
-	ELEC_GEN_24=15,
-	ELEC_GEN_VS_YESTERDAY=16,
-	ELEC_GEN_WEEK=17,
-	ELEC_GEN_VS_WEEK=18,
-	ELEC_GEN_MONTH=19,
-	ELEC_GEN_VS_MONTH=20,
+        ELEC_GEN=16,
+	ELEC_GEN_24=17,
+	ELEC_GEN_VS_YESTERDAY=18,
+	ELEC_GEN_WEEK=19,
+	ELEC_GEN_VS_WEEK=20,
+	ELEC_GEN_MONTH=21,
+	ELEC_GEN_VS_MONTH=22,
+	ELEC_GEN_GRAPH=23,
 
-	GAS=21,
-	GAS_24=22,
-	GAS_VS_YESTERDAY=23,
-	GAS_WEEK=24,
-	GAS_VS_WEEK=25,
-	GAS_MONTH=26,
-	GAS_VS_MONTH=27,
+	GAS=24,
+	GAS_24=25,
+	GAS_VS_YESTERDAY=26,
+	GAS_WEEK=27,
+	GAS_VS_WEEK=28,
+	GAS_MONTH=29,
+	GAS_VS_MONTH=30,
+	GAS_GRAPH=31,
 
-	WATER=28,
-	WATER_24=29,
-	WATER_VS_YESTERDAY=30,
-	WATER_WEEK=31,
-	WATER_VS_WEEK=32,
-	WATER_MONTH=33,
-	WATER_VS_MONTH=34
+	WATER=32,
+	WATER_24=33,
+	WATER_VS_YESTERDAY=34,
+	WATER_WEEK=35,
+	WATER_VS_WEEK=36,
+	WATER_MONTH=37,
+	WATER_VS_MONTH=38
 };
 static char headers[5][32]={"Loading data...","","","",""};
 static char header_details[5][32]={"","","","",""};
-static char* sensor_data[35]={'\0','\0',"","","",","","","","",","","","","",","","","","",","","","","",","","","","",","","","",""};
+static char* sensor_data[39]={'\0','\0',"","","",","","","","",","","","","",","","","","",","","","","",","","","","",","","","",""};
+static GPathInfo* graphs[5];
 static const GPathInfo HOUSE_PATH_POINTS = {
   // This is the amount of points
   24,
@@ -336,13 +341,13 @@ void sensor_window_load(Window *window) {
 	  text_layer_set_text_alignment(text_layer_m1, GTextAlignmentCenter);
   
     text_layer_m2 = text_layer_create(GRect(13, 130, 75,18));
-  	text_layer_set_text(text_layer_m2,sensor_data[selected_sensor*7+5]);
+  	text_layer_set_text(text_layer_m2,sensor_data[selected_sensor*8+5]);
 	  text_layer_set_font(text_layer_m2, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer_m2, GTextAlignmentRight);
     
 
     text_layer_m3 = text_layer_create(GRect(85, 130, 59,18));
-  	text_layer_set_text(text_layer_m3,sensor_data[selected_sensor*7+6]);
+  	text_layer_set_text(text_layer_m3,sensor_data[selected_sensor*8+6]);
 	  text_layer_set_font(text_layer_m3, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer_m3, GTextAlignmentRight);
     
@@ -356,12 +361,12 @@ void sensor_window_load(Window *window) {
 	  text_layer_set_text_alignment(text_layer_w1, GTextAlignmentCenter);
 
     text_layer_w2 = text_layer_create(GRect(13, 113, 75,18));
-  	text_layer_set_text(text_layer_w2,sensor_data[selected_sensor*7+3]);
+  	text_layer_set_text(text_layer_w2,sensor_data[selected_sensor*8+3]);
 	  text_layer_set_font(text_layer_w2, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer_w2, GTextAlignmentRight);
     
     text_layer_w3 = text_layer_create(GRect(85, 113, 59,18));
-  	text_layer_set_text(text_layer_w3,sensor_data[selected_sensor*7+4]);
+  	text_layer_set_text(text_layer_w3,sensor_data[selected_sensor*8+4]);
 	  text_layer_set_font(text_layer_w3, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer_w3, GTextAlignmentRight);
 
@@ -375,12 +380,12 @@ void sensor_window_load(Window *window) {
 	  text_layer_set_text_alignment(text_layer_d1, GTextAlignmentCenter);
 
     text_layer_d2 = text_layer_create(GRect(13, 96, 75,18));
-  	text_layer_set_text(text_layer_d2,sensor_data[selected_sensor*7+1]);
+  	text_layer_set_text(text_layer_d2,sensor_data[selected_sensor*8+1]);
 	  text_layer_set_font(text_layer_d2, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer_d2, GTextAlignmentRight);
 
     text_layer_d3 = text_layer_create(GRect(85, 96, 59,18));
-  	text_layer_set_text(text_layer_d3,sensor_data[selected_sensor*7+2]);
+  	text_layer_set_text(text_layer_d3,sensor_data[selected_sensor*8+2]);
 	  text_layer_set_font(text_layer_d3, fonts_get_system_font( FONT_KEY_GOTHIC_18_BOLD));
 	  text_layer_set_text_alignment(text_layer_d3, GTextAlignmentRight);
     
@@ -390,7 +395,7 @@ void sensor_window_load(Window *window) {
 
     rect = layer_get_frame(borderLayer);
     text_layer_current = text_layer_create(GRect(0, 70, rect.size.w,24));
-  	text_layer_set_text(text_layer_current,sensor_data[selected_sensor*7]);
+  	text_layer_set_text(text_layer_current,sensor_data[selected_sensor*8]);
 	  text_layer_set_font(text_layer_current, fonts_get_system_font( FONT_KEY_GOTHIC_24_BOLD));
 	  text_layer_set_text_alignment(text_layer_current, GTextAlignmentCenter);
     layer_add_child(borderLayer, text_layer_get_layer(text_layer_current));	
@@ -471,11 +476,11 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
   for(int i=0;i<5;i++)
   {
     
-    tuple = dict_find(received, i*7);
+    tuple = dict_find(received, i*8);
     if(tuple){
       strncpy(headers[num_first_menu_items],predefind_headers[i],30);
-      sensor_data[i*7]=tuple->value->cstring;
-      for(int j=i*7+1;j<i*7+7;j++)
+      sensor_data[i*8]=tuple->value->cstring;
+      for(int j=i*8+1;j<i*8+7;j++)
       {
         tupleData=dict_find(received,j);
         if(tupleData)
@@ -483,10 +488,10 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
             sensor_data[j]=tupleData->value->cstring;
         }
       }
-      if(sensor_data[i*7+1])
+      if(sensor_data[i*8+1])
       {
          char h_details[32]="";
-          snprintf(h_details,30,"%s 24h:%s",sensor_data[i*7],sensor_data[i*7+1]);
+          snprintf(h_details,30,"%s 24h:%s",sensor_data[i*8],sensor_data[i*8+1]);
           strncpy(header_details[num_first_menu_items],h_details,30);
       }
      
