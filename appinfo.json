@@ -38,7 +38,7 @@
         "water_week": 35,
         "water_vs_week": 36,
         "water_month": 37,
-        "water_vs_month": 38
+        "water_vs_month": 38,
 	"water_graph": 39
     },
     "capabilities": [
