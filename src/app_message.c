@@ -59,9 +59,11 @@ enum {
 	WATER_VS_MONTH=38
 };
 static char headers[5][32]={"Loading data...","","","",""};
-static char header_details[5][32]={"","","","",""};
+static char header_details[5][32]={"\0","\0","\0","\0","\0"};
 static char* sensor_data[39]={'\0','\0',"","","",","","","","",","","","","",","","","","",","","","","",","","","","",","","","",""};
 static uint8_t* graph_data[5];
+static uint8_t loaded=0;
+static uint8_t debug=0;
 
 static GPathInfo graph_points = {
   // This is the amount of points
@@ -225,13 +227,17 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 // Here we capture when a user selects a menu item
 void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
   // Use the row to specify which item will receive the select action
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Menu selected ! %d",cell_index->row);
+  if(debug)
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Menu selected ! %d",cell_index->row);
   selected_sensor=cell_index->row;
-  if(sensor_data[0]!=NULL)
+  if(loaded)
   {
     for(int i=1;i<31;i++)
     {
       graph_points.points[i].y=(int)graph_data[selected_sensor][i-1];
+      if(debug)
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Graph ! %d",graph_points.points[i].y);
+      
     }
       
       window_stack_push(sensor_window, true);
@@ -245,7 +251,8 @@ void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *da
 
 }
 void menu_longclick_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Menu longclick ! %d",cell_index->row);
+  if(debug)
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Menu longclick ! %d",cell_index->row);
   send_message();
 }
  
@@ -428,7 +435,8 @@ void sensor_window_load(Window *window) {
   
 
 	  // App Logging!
-	  APP_LOG(APP_LOG_LEVEL_DEBUG, "Just pushed a window!  ");
+    if(debug)
+	    APP_LOG(APP_LOG_LEVEL_DEBUG, "Just pushed a window!  ");
 
 
 }
@@ -468,6 +476,7 @@ void send_message(void){
 	
 	dict_write_end(iter);
  	app_message_outbox_send();
+  loaded=0;
   strncpy(header_title, "Loading data....",32);
   layer_mark_dirty(menu_layer_get_layer(menu_layer));
 
@@ -479,7 +488,8 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
  
 
   char time_txt[32];
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Just got message!");
+  if(debug)
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Just got message!");
 
   time_t t = time(NULL);
   struct tm *lt = localtime(&t);
@@ -487,6 +497,7 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
 
   num_menu_sections=1;
   num_first_menu_items=0;
+  loaded=1;
   for(int i=0;i<5;i++)
   {
     
@@ -501,21 +512,28 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
         {
             sensor_data[j]=tupleData->value->cstring;
         }
+        else
+        {
+            loaded=0;  
+            strncpy(header_title, "Can't load data...",32);
+        }
       }
       tupleData=dict_find(received,i*8+7);
       graph_data[i]=tupleData->value->data;
-      if(sensor_data[i*8+1])
+      if(loaded)
       {
-         char h_details[32]="";
-          snprintf(h_details,30,"%s 24h:%s",sensor_data[i*8],sensor_data[i*8+1]);
-          strncpy(header_details[num_first_menu_items],h_details,30);
+        if(sensor_data[i*8+1])
+        {
+              char h_details[32]="";
+              snprintf(h_details,30,"%s 24h:%s",sensor_data[i*8],sensor_data[i*8+1]);
+              strncpy(header_details[num_first_menu_items],h_details,30);
+         }
       }
-     
-      for(int k=0;k<=i;k++)
-      {
-          APP_LOG(APP_LOG_LEVEL_DEBUG, header_details[k]);
-          APP_LOG(APP_LOG_LEVEL_DEBUG, "index %d",k);
-      }
+//      for(int k=0;k<=i;k++)
+//      {
+//          APP_LOG(APP_LOG_LEVEL_DEBUG, header_details[k]);
+//          APP_LOG(APP_LOG_LEVEL_DEBUG, "index %d",k);
+//      }
       num_first_menu_items++;
   }
 }
@@ -548,7 +566,8 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
 		APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Message: %s", tuple->value->cstring);
 	}
 */
-    strncpy(header_title, time_txt,32);
+    if(loaded)
+        strncpy(header_title, time_txt,32);
  
     menu_layer_reload_data(menu_layer);
     layer_mark_dirty(menu_layer_get_layer(menu_layer));

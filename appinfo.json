@@ -60,7 +60,7 @@
     "shortName": "Energy Control",
     "uuid": "410bdf5c-f28b-447c-a787-e392e6ee2413",
     "versionCode": 1,
-    "versionLabel": "0.1",
+    "versionLabel": "0.2",
     "watchapp": {
         "watchface": false
     }
