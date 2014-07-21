@@ -61,38 +61,47 @@ enum {
 static char headers[5][32]={"Loading data...","","","",""};
 static char header_details[5][32]={"","","","",""};
 static char* sensor_data[39]={'\0','\0',"","","",","","","","",","","","","",","","","","",","","","","",","","","","",","","","",""};
-static GPathInfo* graphs[5];
-static const GPathInfo HOUSE_PATH_POINTS = {
+static uint8_t* graph_data[5];
+
+static GPathInfo graph_points = {
   // This is the amount of points
-  24,
+  32,
   // A path can be concave, but it should not twist on itself
   // The points should be defined in clockwise order due to the rendering
   // implementation. Counter-clockwise will work in older firmwares, but
   // it is not officially supported
   (GPoint []) {
-    {0, 71},
-    {2, 20},
-    {4, 75},
-    {6, 5},
-    {8, 69},
-    {10, 50},
-    {12, 56},
-    {14, 56},
-    {16, 20},
-    {18, 69},
+    {1, 71},
+    {12, 69},
+    {16, 69},
     {20, 69},
-    {66, 69},
-    {72, 20},
-    {78, 75},
-    {84, 5},
-    {90, 69},
-    {96, 50},
-    {102, 56},
-    {108, 56},
-    {114, 20},
+    {24, 69},
+    {32, 69},
+    {36, 69},
+    {40, 69},
+    {44, 69},
+    {48, 69},
+    {52, 69},
+    {56, 69},
+    {60, 69},
+    {64, 69},
+    {68, 69},
+    {72, 69},
+    {76, 69},
+    {80, 69},
+    {84, 69},
+    {88, 69},
+    {92, 69},
+    {96, 69},
+    {100, 69},
+    {104, 69},
+    {108, 69},
+    {112, 69},
+    {116, 69},
     {120, 69},
-    {126, 10},
-    {132, 90},
+    {124, 69},
+    {128, 69},
+    {132, 69},
     {144, 71}
   }
 };
@@ -217,9 +226,14 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
   // Use the row to specify which item will receive the select action
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Menu selected ! %d",cell_index->row);
+  selected_sensor=cell_index->row;
   if(sensor_data[0]!=NULL)
   {
-      selected_sensor=cell_index->row;
+    for(int i=1;i<31;i++)
+    {
+      graph_points.points[i].y=(int)graph_data[selected_sensor][i-1];
+    }
+      
       window_stack_push(sensor_window, true);
   } 
 //  switch (cell_index->row) {
@@ -328,7 +342,7 @@ void sensor_window_load(Window *window) {
 
       // Cycle to the next path
     // Pass the corresponding GPathInfo to initialize a GPath
-    current_path = gpath_create(&HOUSE_PATH_POINTS);
+    current_path = gpath_create(&graph_points);
     //GRect bounds = layer_get_frame(window_layer);
     GRect bounds=GRect(0, 0, 142, 72);
     path_layer = layer_create(bounds);
@@ -488,6 +502,8 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
             sensor_data[j]=tupleData->value->cstring;
         }
       }
+      tupleData=dict_find(received,i*8+7);
+      graph_data[i]=tupleData->value->data;
       if(sensor_data[i*8+1])
       {
          char h_details[32]="";
